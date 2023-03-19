@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import Searchbar from 'components/Searchbar';
 import ImageGallery from 'components/ImageGallery';
@@ -14,8 +14,11 @@ export default function App() {
   const [page, setPage] = useState(1);
   const [totalImgs, setTotalImgs] = useState(0);
   const [status, setStatus] = useState('idle');
+  const scrollTo = useRef(null);
 
   useEffect(() => {
+    if (!searchValue) return;
+
     const fetch = async () => {
       try {
         const res = await API.searchImgs(searchValue, API_KEY, page);
@@ -32,9 +35,14 @@ export default function App() {
       }
     };
 
-    if (!searchValue) return;
     fetch();
   }, [searchValue, page]);
+
+  useEffect(() => {
+    if (scrollTo.current) {
+      scrollTo.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [gallery]);
 
   const handleSubmit = value => {
     setStatus('pending');
@@ -57,6 +65,7 @@ export default function App() {
         status={status}
       />
       <ImageGallery items={gallery} status={status} searchValue={searchValue} />
+      <div ref={scrollTo} />
       {gallery.length !== 0 && totalImgs > 12 && gallery.length < totalImgs && (
         <Button onClick={onLoadMore} classname={'Button'}>
           Load More

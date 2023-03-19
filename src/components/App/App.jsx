@@ -1,88 +1,69 @@
 import PropTypes from 'prop-types';
+import { useState, useEffect } from 'react';
 
 import Searchbar from 'components/Searchbar';
 import ImageGallery from 'components/ImageGallery';
-import { Component } from 'react';
-import * as API from 'services/api';
 import Button from 'components/Button';
+import * as API from 'services/api';
 
 const API_KEY = '33614277-14313d1389d57b7e80a4c1e60';
 
-export default class App extends Component {
-  state = {
-    gallery: [],
-    searchValue: '',
-    page: 1,
-    isLoading: false,
-    totalImgs: 0,
-    status: 'idle',
-  };
+export default function App() {
+  const [gallery, setGallery] = useState([]);
+  const [searchValue, setSearchValue] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalImgs, setTotalImgs] = useState(0);
+  const [status, setStatus] = useState('idle');
 
-  handleSubmit = async values => {
-    try {
-      this.setState({ isLoading: true, status: 'pending' });
-      const res = await API.searchImgs(values.search, API_KEY, 1);
-      if (res.totalHits === 0) {
-        return this.setState({
-          searchValue: values.search,
-          status: 'rejected',
-        });
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const res = await API.searchImgs(searchValue, API_KEY, page);
+        if (res.totalHits === 0) {
+          setStatus('rejected');
+          return;
+        }
+        setGallery(s => [...s, ...res.hits]);
+        setTotalImgs(res.total);
+        setStatus('resolved');
+      } catch (error) {
+        setStatus('rejected');
+        console.log(error);
       }
-      this.setState({
-        gallery: [...res.hits],
-        searchValue: values.search,
-        page: 2,
-        isLoading: false,
-        totalImgs: res.totalHits,
-        status: 'resolved',
-      });
-    } catch (error) {
-      this.setState({
-        searchValue: values.search,
-        status: 'rejected',
-      });
-      console.log(error);
-    }
+    };
+
+    if (!searchValue) return;
+    fetch();
+  }, [searchValue, page]);
+
+  const handleSubmit = value => {
+    setStatus('pending');
+    setGallery([]);
+    setTotalImgs(0);
+    setSearchValue(value);
+    setPage(1);
   };
 
-  onLoadMore = async () => {
-    const { gallery, searchValue, page } = this.state;
-    try {
-      const res = await API.searchImgs(searchValue, API_KEY, page);
-      this.setState({
-        gallery: [...gallery, ...res.hits],
-        page: page + 1,
-      });
-    } catch (error) {
-      console.log(error);
-    }
+  const onLoadMore = async () => {
+    setStatus('pending');
+    setPage(prevPage => prevPage + 1);
   };
 
-  onLoading = e => {
-    this.setState({ isLoading: e });
-  };
-
-  render() {
-    const { gallery, searchValue, isLoading, totalImgs, status } = this.state;
-    return (
-      <div className="App">
-        <Searchbar onSubmit={this.handleSubmit} />
-        <ImageGallery
-          items={gallery}
-          status={status}
-          searchValue={searchValue}
-        />
-        {gallery.length !== 0 &&
-        totalImgs > 12 &&
-        !isLoading &&
-        gallery.length % 2 === 0 ? (
-          <Button onClick={this.onLoadMore} />
-        ) : (
-          <div></div>
-        )}
-      </div>
-    );
-  }
+  return (
+    <div className="App">
+      <Searchbar
+        onSubmit={handleSubmit}
+        totalImgs={totalImgs}
+        status={status}
+      />
+      <ImageGallery items={gallery} status={status} searchValue={searchValue} />
+      {gallery.length !== 0 && totalImgs > 12 && gallery.length < totalImgs && (
+        <Button onClick={onLoadMore} classname={'Button'}>
+          Load More
+        </Button>
+      )}
+    </div>
+  );
 }
 
 App.propTypes = {
@@ -96,7 +77,6 @@ App.propTypes = {
   ),
   searchValue: PropTypes.string,
   page: PropTypes.number,
-  isLoading: PropTypes.bool,
   totalImgs: PropTypes.number,
   status: PropTypes.string,
 };

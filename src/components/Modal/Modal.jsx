@@ -1,39 +1,37 @@
-import { Component } from 'react';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 const rootModal = document.querySelector('#root-modal');
 
-export default class Modal extends Component {
-  componentDidMount() {
-    window.addEventListener('keydown', this.onKeyDown);
-    document
-      .querySelector('.Overlay')
-      .addEventListener('click', this.onBackdropClick);
-  }
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.onKeyDown);
-    document
-      .querySelector('.Overlay')
-      .removeEventListener('click', this.onBackdropClick);
-  }
+export default function Modal({ onClose, children }) {
+  useEffect(() => {
+    const overlay = document.querySelector('.Overlay');
 
-  onKeyDown = e => {
-    if (e.code === 'Escape') {
-      this.props.onClose();
-    }
-  };
-  onBackdropClick = e => {
-    if (e.target === e.currentTarget) {
-      this.props.onClose();
-    }
-  };
+    const onKeyDown = e => {
+      if (e.code === 'Escape') {
+        onClose();
+      }
+    };
 
-  render() {
-    return createPortal(
-      <div className="Overlay">
-        <div className="Modal">{this.props.children}</div>
-      </div>,
-      rootModal
-    );
-  }
+    const onBackdropClick = e => {
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    overlay.addEventListener('click', onBackdropClick);
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      overlay.removeEventListener('click', onBackdropClick);
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div className="Overlay">
+      <div className="Modal">{children}</div>
+    </div>,
+    rootModal
+  );
 }

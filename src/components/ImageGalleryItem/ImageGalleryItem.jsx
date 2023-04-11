@@ -1,18 +1,16 @@
 import { useState } from 'react';
 
+import PropTypes from 'prop-types';
+
 import Modal from 'components/Modal';
 
 export default function ImageGalleryItem({ item }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { id, webformatURL, largeImageURL, tags } = item;
+  const { webformatURL, largeImageURL, tags } = item;
 
   return (
-    <li
-      key={id}
-      className="ImageGalleryItem"
-      onClick={() => setIsModalOpen(true)}
-    >
+    <li className="ImageGalleryItem" onClick={() => setIsModalOpen(true)}>
       <img src={webformatURL} alt={tags} className="ImageGalleryItem-image" />
       {isModalOpen && (
         <Modal
@@ -26,3 +24,11 @@ export default function ImageGalleryItem({ item }) {
     </li>
   );
 }
+
+ImageGalleryItem.propTypes = {
+  item: PropTypes.shape({
+    webformatURL: PropTypes.string.isRequired,
+    largeImageURL: PropTypes.string.isRequired,
+    tags: PropTypes.string.isRequired,
+  }).isRequired,
+};

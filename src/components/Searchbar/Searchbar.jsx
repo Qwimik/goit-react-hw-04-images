@@ -1,32 +1,15 @@
 import { useState } from 'react';
+
+import PropTypes from 'prop-types';
+
 import { AiOutlineSearch } from 'react-icons/ai';
-import { RotatingLines } from 'react-loader-spinner';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
-let searchText = '';
-
-export default function Searchbar({ onSubmit, totalImgs, status }) {
+export default function Searchbar({ onSubmit }) {
   const [search, setSearch] = useState('');
 
   const handleSubmit = e => {
     e.preventDefault();
-    if (search === '') {
-      toast.error('Please enter your request!', {
-        position: 'top-right',
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: 'colored',
-      });
-      return;
-    }
     onSubmit(search);
-    searchText = search;
-    setSearch('');
   };
 
   return (
@@ -47,26 +30,10 @@ export default function Searchbar({ onSubmit, totalImgs, status }) {
           onChange={e => setSearch(e.target.value)}
         />
       </form>
-      {totalImgs !== 0 && (
-        <div className="result_text-container">
-          <p className="result_text">
-            {totalImgs} pictures were found on the{' '}
-            <span>"{searchText ? searchText : 'random'}"</span> request.
-          </p>
-        </div>
-      )}
-      {status === 'pending' && (
-        <div className="loading">
-          <RotatingLines
-            strokeColor="#fff"
-            strokeWidth="3"
-            animationDuration="0.75"
-            width="40"
-            visible={true}
-          />
-        </div>
-      )}
-      <ToastContainer />
     </header>
   );
 }
+
+Searchbar.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
+};

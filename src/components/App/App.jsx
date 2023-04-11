@@ -1,5 +1,8 @@
-import PropTypes from 'prop-types';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+
+import { RotatingLines } from 'react-loader-spinner';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import Searchbar from 'components/Searchbar';
 import ImageGallery from 'components/ImageGallery';
@@ -14,12 +17,13 @@ export default function App() {
   const [page, setPage] = useState(1);
   const [totalImgs, setTotalImgs] = useState(0);
   const [status, setStatus] = useState('idle');
-  const scrollTo = useRef(null);
 
   useEffect(() => {
     if (!searchValue) return;
 
     const fetch = async () => {
+      setStatus('pending');
+
       try {
         const res = await API.searchImgs(searchValue, API_KEY, page);
         if (res.totalHits === 0) {
@@ -38,21 +42,27 @@ export default function App() {
     fetch();
   }, [searchValue, page]);
 
-  useEffect(() => {
-    if (scrollTo.current) {
-      scrollTo.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [gallery]);
-
   const handleSubmit = value => {
-    setStatus('pending');
-    setGallery([]);
+    if (value === '') {
+      toast.error('Please enter your request!', {
+        position: 'top-right',
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: 'colored',
+      });
+      return;
+    }
     setTotalImgs(0);
+    setGallery([]);
     setSearchValue(value);
     setPage(1);
   };
 
-  const onLoadMore = async () => {
+  const onLoadMore = () => {
     setStatus('pending');
     setPage(prevPage => prevPage + 1);
   };
@@ -64,28 +74,30 @@ export default function App() {
         totalImgs={totalImgs}
         status={status}
       />
+      {status === 'idle' && (
+        <p className="start-text">Please enter your request</p>
+      )}
+      {status === 'rejected' && (
+        <p className="start-text">
+          Sorry, no result at your request "{searchValue}" :(
+        </p>
+      )}
       <ImageGallery items={gallery} status={status} searchValue={searchValue} />
-      <div ref={scrollTo} />
       {gallery.length !== 0 && totalImgs > 12 && gallery.length < totalImgs && (
         <Button onClick={onLoadMore} classname={'Button'}>
           Load More
         </Button>
       )}
+      <div className="loading">
+        <RotatingLines
+          strokeColor="#242424"
+          strokeWidth="3"
+          animationDuration="0.75"
+          width="40"
+          visible={status === 'pending'}
+        />
+      </div>
+      <ToastContainer />
     </div>
   );
 }
-
-App.propTypes = {
-  gallery: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      webformatURL: PropTypes.string.isRequired,
-      largeImageURL: PropTypes.string.isRequired,
-      tags: PropTypes.string.isRequired,
-    })
-  ),
-  searchValue: PropTypes.string,
-  page: PropTypes.number,
-  totalImgs: PropTypes.number,
-  status: PropTypes.string,
-};

@@ -1,11 +1,14 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
+import PropTypes from 'prop-types';
+
 const rootModal = document.querySelector('#root-modal');
 
 export default function Modal({ onClose, children }) {
   useEffect(() => {
     const overlay = document.querySelector('.Overlay');
+    const htmlEl = document.querySelector('html');
 
     const onKeyDown = e => {
       if (e.code === 'Escape') {
@@ -21,10 +24,12 @@ export default function Modal({ onClose, children }) {
 
     window.addEventListener('keydown', onKeyDown);
     overlay.addEventListener('click', onBackdropClick);
+    htmlEl.style.overflow = 'hidden';
 
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       overlay.removeEventListener('click', onBackdropClick);
+      htmlEl.style.overflow = 'visible';
     };
   }, [onClose]);
 
@@ -35,3 +40,8 @@ export default function Modal({ onClose, children }) {
     rootModal
   );
 }
+
+Modal.propTypes = {
+  onClose: PropTypes.func.isRequired,
+  children: PropTypes.node.isRequired,
+};

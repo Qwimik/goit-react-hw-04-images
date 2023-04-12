@@ -56,6 +56,19 @@ export default function App() {
       });
       return;
     }
+    if (value === searchValue) {
+      toast.warning(`You already search: "${searchValue}".`, {
+        position: 'top-right',
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: 'colored',
+      });
+      return;
+    }
     setTotalImgs(0);
     setGallery([]);
     setSearchValue(value);
